@@ -8,6 +8,7 @@ import {
   TeamStanding 
 } from './types/tournament';
 import { INITIAL_TOURNAMENT } from './data/defaultTournament';
+import { USER_SCREENSHOT_TEAMS, USER_SCREENSHOT_MATCH } from './data/userScreenshotMatch';
 import { calculateTournamentStandings } from './utils/scoringEngine';
 import { Header, AppTab } from './components/Header';
 import { StandingsTable } from './components/StandingsTable';
@@ -132,14 +133,46 @@ export default function App() {
   };
 
   // Apply match scanned from Free Fire Screenshot
-  const handleApplyScannedMatch = (newMatch: Match, updatedTeams?: Team[]) => {
+  const handleApplyScannedMatch = (
+    newMatch: Match,
+    updatedTeams?: Team[],
+    resetExistingMatches?: boolean
+  ) => {
     setTournament((prev) => ({
       ...prev,
       teams: updatedTeams || prev.teams,
-      matches: [...prev.matches, newMatch],
+      matches: resetExistingMatches ? [newMatch] : [...prev.matches, newMatch],
     }));
     setIsScreenshotScannerOpen(false);
     setActiveTab('standings');
+  };
+
+  // Reset Points Table
+  const handleResetPointsTable = (
+    mode: 'clear_matches' | 'free_fire_screenshot' | 'default_tournament' | 'blank'
+  ) => {
+    if (mode === 'clear_matches') {
+      setTournament((prev) => ({
+        ...prev,
+        matches: [],
+      }));
+    } else if (mode === 'free_fire_screenshot') {
+      setTournament((prev) => ({
+        ...prev,
+        name: 'FREE FIRE ESPORTS CHAMPIONSHIP',
+        teams: USER_SCREENSHOT_TEAMS,
+        matches: [USER_SCREENSHOT_MATCH],
+      }));
+    } else if (mode === 'default_tournament') {
+      setTournament(INITIAL_TOURNAMENT);
+    } else if (mode === 'blank') {
+      setTournament({
+        ...INITIAL_TOURNAMENT,
+        name: 'CUSTOM TOURNAMENT',
+        teams: [],
+        matches: [],
+      });
+    }
   };
 
   // Update Scoring Rules and Tie-Breakers
@@ -221,6 +254,7 @@ export default function App() {
               onOpenGraphicStudio={handleOpenGraphicStudio}
               onOpenScoringRules={() => setIsScoringModalOpen(true)}
               onOpenScreenshotScanner={() => setIsScreenshotScannerOpen(true)}
+              onResetPointsTable={handleResetPointsTable}
             />
           </div>
         )}

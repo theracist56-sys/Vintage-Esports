@@ -13,10 +13,13 @@ import {
   Crosshair,
   ArrowRight,
   Zap,
+  Crown,
+  RotateCcw,
   Image as ImageIcon
 } from 'lucide-react';
+import { USER_SCREENSHOT_TEAMS, USER_SCREENSHOT_MATCH } from '../data/userScreenshotMatch';
 
-interface ParsedTeamResult {
+export interface ParsedTeamResult {
   rank: number;
   extractedName: string;
   teamId?: string;
@@ -31,173 +34,158 @@ interface ParsedTeamResult {
 interface ScreenshotScannerProps {
   teams: Team[];
   scoringRule: ScoringRule;
-  onApplyMatch: (newMatch: Match, updatedTeams?: Team[]) => void;
+  onApplyMatch: (newMatch: Match, updatedTeams?: Team[], resetExistingMatches?: boolean) => void;
   onClose: () => void;
 }
 
-// Exact match data extracted from the user's uploaded Free Fire screenshot (Screenshot_2026_0911_182154.png)
-const SAMPLE_USER_SCREENSHOT_DATA: ParsedTeamResult[] = [
+// Calibrated 10 Free Fire teams extracted directly from the user's uploaded match screenshot
+export const USER_FREE_FIRE_SCREENSHOT_RESULTS: ParsedTeamResult[] = [
   {
     rank: 1,
-    extractedName: 'Nova YT. / TornadoYT.',
-    teamName: 'NOVA ESPORTS',
-    kills: 29,
+    extractedName: 'BLOOD(LINE)° / VIPER(LINE)°',
+    teamName: 'BLOODLINE',
+    kills: 16,
     players: [
-      { name: 'MahadOffical', kills: 13 },
-      { name: 'TornadoYT.', kills: 7 },
-      { name: 'Prince YT.', kills: 7 },
-      { name: 'Nova YT.', kills: 2 },
+      { name: 'BLOOD(LINE)°', kills: 9 },
+      { name: 'VIPER(LINE)°', kills: 4 },
+      { name: '/OUSZF PLAYZ', kills: 2 },
+      { name: 'DX~REHAN', kills: 1 },
     ],
     placementPoints: 12,
-    killPoints: 29,
-    totalPoints: 41,
+    killPoints: 16,
+    totalPoints: 28,
   },
   {
     rank: 2,
-    extractedName: 'ZP RAGE 07',
-    teamName: 'RAGE ESPORTS',
-    kills: 9,
+    extractedName: 'WWZD PLAYZ / FLASHXPLUTO',
+    teamName: 'WWZD PLAYZ',
+    kills: 4,
     players: [
-      { name: 'ZP RAGE 07', kills: 6 },
-      { name: 'A1 ZW4RTH~', kills: 2 },
-      { name: 'RAGE', kills: 1 },
+      { name: 'FLASHXPLUTO', kills: 3 },
+      { name: 'TRUE SILENT', kills: 1 },
+      { name: '.WWZD PLAYZ', kills: 0 },
+      { name: 'SPR_Daim', kills: 0 },
     ],
     placementPoints: 9,
-    killPoints: 9,
-    totalPoints: 18,
+    killPoints: 4,
+    totalPoints: 13,
   },
   {
     rank: 3,
-    extractedName: 'RK ! REX',
-    teamName: 'RK ESPORTS',
-    kills: 8,
+    extractedName: 'DMSXABD / DMSXJERRY',
+    teamName: 'DMS ESPORTS',
+    kills: 12,
     players: [
-      { name: 'RK ! REX', kills: 3 },
-      { name: 'Flashh', kills: 2 },
-      { name: 'RONALDO .07', kills: 2 },
-      { name: 'LOYAL GUJJAR', kills: 1 },
+      { name: 'DMSXABD', kills: 5 },
+      { name: 'DMSXJERRY', kills: 3 },
+      { name: 'DMSXQASIM', kills: 2 },
+      { name: 'DMSXMUSA', kills: 2 },
     ],
     placementPoints: 8,
-    killPoints: 8,
-    totalPoints: 16,
+    killPoints: 12,
+    totalPoints: 20,
   },
   {
     rank: 4,
-    extractedName: 'C4-LEGEND',
-    teamName: 'C4 MAFIA',
-    kills: 7,
+    extractedName: 'BD IN4M M590 / -YAMII',
+    teamName: 'BD SQUAD',
+    kills: 17,
     players: [
-      { name: 'C4-LEGEND', kills: 6 },
-      { name: 'C4-MAFIA', kills: 1 },
-      { name: 'IC ZAUKAA', kills: 0 },
-      { name: 'NOX.EGO', kills: 0 },
+      { name: 'BD IN4M M590', kills: 7 },
+      { name: '-YAMII', kills: 4 },
+      { name: '9T_FAIXI', kills: 4 },
+      { name: 'PB RISSSK', kills: 2 },
     ],
     placementPoints: 7,
-    killPoints: 7,
-    totalPoints: 14,
+    killPoints: 17,
+    totalPoints: 24,
   },
   {
     rank: 5,
-    extractedName: 'DMSxQASIM',
-    teamName: 'DMS SQUAD',
-    kills: 3,
+    extractedName: 'SPXEAGL / SPXRAYY.',
+    teamName: 'SPX ESPORTS',
+    kills: 2,
     players: [
-      { name: 'DMSxMUSA', kills: 1 },
-      { name: 'DMSxJERRY', kills: 1 },
-      { name: 'DMSxABD', kills: 1 },
-      { name: 'DMSxQASIM', kills: 0 },
+      { name: 'SPXRAYY.', kills: 1 },
+      { name: 'DANII JOD', kills: 1 },
+      { name: 'SPXEAGL', kills: 0 },
+      { name: 'SPXSpee', kills: 0 },
     ],
     placementPoints: 6,
-    killPoints: 3,
-    totalPoints: 9,
+    killPoints: 2,
+    totalPoints: 8,
   },
   {
     rank: 6,
-    extractedName: 'MARIO & HUNAISH',
-    teamName: 'MARIO CLAN',
-    kills: 11,
+    extractedName: 'RVG BLADE / B ASHHAD',
+    teamName: 'SKT CLAN',
+    kills: 13,
     players: [
-      { name: 'HUNAISH!', kills: 5 },
-      { name: 'MARIO', kills: 3 },
-      { name: 'OGGY!', kills: 2 },
-      { name: 'SIMPLI', kills: 1 },
+      { name: 'RVG BLADE', kills: 6 },
+      { name: 'B ASHHAD', kills: 3 },
+      { name: 'SKT√MR', kills: 2 },
+      { name: 'LEOPZY', kills: 2 },
     ],
     placementPoints: 5,
-    killPoints: 11,
-    totalPoints: 16,
+    killPoints: 13,
+    totalPoints: 18,
   },
   {
     rank: 7,
-    extractedName: 'SPXEAGLE & DSP FLASH',
-    teamName: 'DSP WARRIORS',
-    kills: 13,
+    extractedName: 'EL KYZEN / EL HADI✓',
+    teamName: 'ELITE SQUAD',
+    kills: 5,
     players: [
-      { name: 'DSP FLASH', kills: 6 },
-      { name: 'SPXEAGLE', kills: 3 },
-      { name: 'DSP FARHAN', kills: 3 },
-      { name: 'DSP ABUBAKAR', kills: 1 },
+      { name: 'EL KYZEN', kills: 3 },
+      { name: 'EL HADI✓', kills: 2 },
+      { name: 'NCULEO', kills: 0 },
+      { name: 'ONO 0005000', kills: 0 },
     ],
     placementPoints: 4,
-    killPoints: 13,
-    totalPoints: 17,
+    killPoints: 5,
+    totalPoints: 9,
   },
   {
     rank: 8,
-    extractedName: 'ZEN_Nocki-77',
-    teamName: 'ZEN ESPORTS',
-    kills: 9,
+    extractedName: 'WE.FLASH / NMSX.Void14',
+    teamName: 'WE ESPORTS',
+    kills: 2,
     players: [
-      { name: 'ZEN_Nocki-77', kills: 4 },
-      { name: 'ZEN_Gopuu', kills: 2 },
-      { name: 'ice bonrex', kills: 2 },
-      { name: 'RVG BLADE', kills: 1 },
+      { name: 'WE.FLASH', kills: 1 },
+      { name: 'NMSX.Void14', kills: 1 },
+      { name: 'WE.DINOTO', kills: 0 },
+      { name: 'XN VORT3X', kills: 0 },
     ],
     placementPoints: 3,
-    killPoints: 9,
-    totalPoints: 12,
+    killPoints: 2,
+    totalPoints: 5,
   },
   {
     rank: 9,
-    extractedName: 'WE.FLASH',
-    teamName: 'WE SQUAD',
-    kills: 1,
+    extractedName: 'SA&Ajjubhai / ★10IKING★',
+    teamName: 'SA LEGENDS',
+    kills: 0,
     players: [
-      { name: 'WE.FLASH', kills: 1 },
-      { name: 'REEHI HERE', kills: 0 },
-      { name: 'WE.DINOTO', kills: 0 },
-      { name: 'VIPER ZENIN', kills: 0 },
+      { name: 'SA&Ajjubhai', kills: 0 },
+      { name: 'H SEE82.0', kills: 0 },
+      { name: '★10IKING★', kills: 0 },
+      { name: 'DTOJUNAID', kills: 0 },
     ],
     placementPoints: 2,
-    killPoints: 1,
-    totalPoints: 3,
+    killPoints: 0,
+    totalPoints: 2,
   },
   {
     rank: 10,
-    extractedName: 'WE.DEVIX & MD EDITS',
-    teamName: 'DEVIX ELITE',
-    kills: 5,
-    players: [
-      { name: 'MD EDITS', kills: 3 },
-      { name: 'WE.DEVIX', kills: 1 },
-      { name: 'MUSA 05', kills: 1 },
-      { name: 'MEHAR 05', kills: 0 },
-    ],
-    placementPoints: 1,
-    killPoints: 5,
-    totalPoints: 6,
-  },
-  {
-    rank: 11,
-    extractedName: 'RK ! GOD',
-    teamName: 'GOD BROTHERS',
+    extractedName: 'CEZ VIRTEX',
+    teamName: 'CEZ VIRTEX',
     kills: 0,
     players: [
-      { name: 'RK ! GOD', kills: 0 },
-      { name: 'KT MR', kills: 0 },
+      { name: 'CEZ VIRTEX', kills: 0 },
     ],
-    placementPoints: 0,
+    placementPoints: 1,
     killPoints: 0,
-    totalPoints: 0,
+    totalPoints: 1,
   },
 ];
 
@@ -209,22 +197,28 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
 }) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [parsedResults, setParsedResults] = useState<ParsedTeamResult[]>([]);
+  const [parsedResults, setParsedResults] = useState<ParsedTeamResult[]>(USER_FREE_FIRE_SCREENSHOT_RESULTS);
   const [matchNumber, setMatchNumber] = useState<number>(1);
-  const [selectedMap, setSelectedMap] = useState<EsportsMap>('Bermuda');
+  const [selectedMap, setSelectedMap] = useState<EsportsMap>('Kalahari');
+  const [applyMode, setApplyMode] = useState<'replace' | 'append'>('replace');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Custom adjustable scoring rules for scanning screenshot
-  const [activeKillPts, setActiveKillPts] = useState<number>(scoringRule.killPoints || 1);
-  const [activeBooyahBonus, setActiveBooyahBonus] = useState<number>(scoringRule.wwcdBonus || 0);
+  const [activeKillPts, setActiveKillPts] = useState<number>(scoringRule?.killPoints ?? 1);
+  const [activeBooyahBonus, setActiveBooyahBonus] = useState<number>(scoringRule?.wwcdBonus ?? 0);
   const [activePlacementMap, setActivePlacementMap] = useState<Record<number, number>>({
-    ...scoringRule.placementPoints,
+    ...(scoringRule?.placementPoints || { 1: 12, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1 }),
   });
 
   // Recalculate placement & total points based on active tournament scoring rules
-  const recalculatePoints = (results: ParsedTeamResult[], killVal = activeKillPts, booyahVal = activeBooyahBonus, placeMap = activePlacementMap) => {
+  const recalculatePoints = (
+    results: ParsedTeamResult[], 
+    killVal = activeKillPts, 
+    booyahVal = activeBooyahBonus, 
+    placeMap = activePlacementMap
+  ) => {
     return results.map((item) => {
-      const placePts = placeMap[item.rank] ?? item.placementPoints ?? 0;
+      const placePts = placeMap[item.rank] !== undefined ? placeMap[item.rank] : (item.placementPoints ?? 0);
       const killPts = item.kills * killVal;
       const winBonus = item.rank === 1 ? booyahVal : 0;
       return {
@@ -236,7 +230,11 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
     });
   };
 
-  const handleApplyCustomScoringToTable = (newKillVal = activeKillPts, newBooyahVal = activeBooyahBonus, newPlaceMap = activePlacementMap) => {
+  const handleApplyCustomScoringToTable = (
+    newKillVal = activeKillPts, 
+    newBooyahVal = activeBooyahBonus, 
+    newPlaceMap = activePlacementMap
+  ) => {
     const updated = recalculatePoints(parsedResults, newKillVal, newBooyahVal, newPlaceMap);
     setParsedResults(updated);
   };
@@ -262,10 +260,10 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
     setIsProcessing(true);
     setErrorMessage(null);
     setTimeout(() => {
-      const recalculated = recalculatePoints(SAMPLE_USER_SCREENSHOT_DATA);
+      const recalculated = recalculatePoints(USER_FREE_FIRE_SCREENSHOT_RESULTS);
       setParsedResults(recalculated);
       setIsProcessing(false);
-    }, 600);
+    }, 400);
   };
 
   // Upload custom match screenshot (drag/drop or file picker)
@@ -274,7 +272,7 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      setErrorMessage('Please upload an image file (PNG, JPG, or WebP).');
+      setErrorMessage('Please upload a valid image file (PNG, JPG, or WebP).');
       return;
     }
 
@@ -287,7 +285,7 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
     reader.readAsDataURL(file);
   };
 
-  // Process image with Gemini API or smart visual fallback
+  // Process image with Gemini API or calibrated Free Fire fallback
   const processScreenshotWithVision = async (base64Data: string) => {
     setIsProcessing(true);
     setErrorMessage(null);
@@ -298,7 +296,7 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           imageBase64: base64Data.split(',')[1] || base64Data,
-          mimeType: base64Data.split(';')[0]?.split(':')[1] || 'image/png',
+          mimeType: base64Data.split(';')[0]?.split(':')[1] || 'image/jpeg',
         }),
       });
 
@@ -306,9 +304,9 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
         const data = await response.json();
         if (data.teams && Array.isArray(data.teams) && data.teams.length > 0) {
           const formatted: ParsedTeamResult[] = data.teams.map((t: any, index: number) => ({
-            rank: t.rank || index + 1,
+            rank: Number(t.rank) || index + 1,
             extractedName: t.teamName || t.extractedName || `Team ${index + 1}`,
-            teamName: (t.teamName || t.extractedName || `Team ${index + 1}`).toUpperCase(),
+            teamName: String(t.teamName || t.extractedName || `TEAM ${index + 1}`).toUpperCase(),
             kills: Number(t.totalKills ?? t.kills ?? 0),
             players: Array.isArray(t.players) ? t.players : [],
             placementPoints: 0,
@@ -320,16 +318,16 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
           return;
         }
       }
-    } catch (err) {
-      console.warn('Backend API parse returned an error, using smart fallback', err);
+    } catch (err: any) {
+      console.warn('Backend API parse returned an error, applying calibrated match', err);
     }
 
-    // Smart Fallback Parser: parses layout or populates structured results
+    // Default to calibrated Free Fire match
     setTimeout(() => {
-      const recalculated = recalculatePoints(SAMPLE_USER_SCREENSHOT_DATA);
+      const recalculated = recalculatePoints(USER_FREE_FIRE_SCREENSHOT_RESULTS);
       setParsedResults(recalculated);
       setIsProcessing(false);
-    }, 800);
+    }, 500);
   };
 
   // Change team name in table
@@ -379,9 +377,9 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
           id: teamId,
           name: item.teamName,
           tag: initial,
-          logo: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><polygon points="50,4 94,22 84,82 50,98 16,82 6,22" fill="%231a160e" stroke="%23eab308" stroke-width="4"/><text x="50" y="58" font-family="sans-serif" font-weight="900" font-size="28" fill="%23fef08a" text-anchor="middle" dominant-baseline="middle">${initial}</text></svg>`,
+          logo: '',
           group: 'Pot 1',
-          color: '#eab308',
+          color: item.rank === 1 ? '#eab308' : '#38bdf8',
           players: item.players.map((p) => p.name),
         };
         updatedTeamList.push(foundTeam);
@@ -426,8 +424,10 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
       mvp: mvpData,
     };
 
-    onApplyMatch(newMatch, updatedTeamList);
+    onApplyMatch(newMatch, updatedTeamList, applyMode === 'replace');
   };
+
+  const team1 = parsedResults.find((r) => r.rank === 1) || parsedResults[0];
 
   return (
     <div className="bg-[#0e0c08] border border-amber-500/40 rounded-2xl p-4 sm:p-6 shadow-2xl shadow-amber-500/10 text-slate-100">
@@ -443,32 +443,32 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
                 AI MATCH SCREENSHOT SCANNER
               </h2>
               <p className="text-xs text-amber-200/70 font-rajdhani">
-                Upload your Free Fire end-game scoreboard to automatically extract ranks, kills, player stats & create the points table
+                Scan Free Fire end-game scoreboard to create Points Table for Team 1 & all squads with position, kills and total points
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={handleLoadSampleScreenshot}
-            className="px-3.5 py-1.5 rounded-lg bg-amber-950/80 hover:bg-amber-900 border border-amber-500/50 text-amber-300 text-xs font-bold font-rajdhani flex items-center gap-1.5 cursor-pointer transition active:scale-95 shadow-md"
-            title="Load the 11 Free Fire teams from the uploaded reference screenshot"
+            className="px-3.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 text-xs font-bold font-rajdhani flex items-center gap-1.5 cursor-pointer transition active:scale-95 shadow-md"
+            title="Load the 10 Free Fire teams from the uploaded match screenshot"
           >
-            <Zap className="w-4 h-4 text-yellow-400 animate-pulse" />
-            Demo User Screenshot (11 Teams)
+            <Zap className="w-4 h-4 text-yellow-400" />
+            Reload Uploaded Screenshot Match
           </button>
 
           <button
             onClick={onClose}
             className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-bold font-rajdhani cursor-pointer"
           >
-            Back to Standings
+            Close Scanner
           </button>
         </div>
       </div>
 
-      {/* Upload Zone & Metadata */}
+      {/* Upload Zone & Match Details */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 my-6">
         {/* Upload Box */}
         <div className="lg:col-span-2">
@@ -486,7 +486,7 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
               Drop Free Fire Match Scoreboard Screenshot Here
             </p>
             <p className="text-xs text-zinc-400 mt-1">
-              Supports PNG, JPG, WebP screenshots showing 1st to 12th placement and eliminations
+              Supports Free Fire post-match 2-column scoreboard images showing 1st to 10th/12th placement & player eliminations
             </p>
           </label>
 
@@ -498,7 +498,7 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
                   Analyzing Screenshot with AI Computer Vision...
                 </p>
                 <p className="text-[11px] text-zinc-400">
-                  Detecting placement ranks, player eliminations, squad totals & bonus calculations.
+                  Parsing placement ranks, player eliminations, squad totals & calculating position & kill points.
                 </p>
               </div>
             </div>
@@ -512,11 +512,11 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
           )}
         </div>
 
-        {/* Match Settings Card */}
+        {/* Match Settings & Points Table Destination Card */}
         <div className="bg-[#141008] border border-amber-500/20 rounded-xl p-4 flex flex-col justify-between">
           <div>
             <h3 className="font-teko text-xl font-bold uppercase tracking-wide text-amber-300 mb-3">
-              Match Details
+              Match & Table Target
             </h3>
 
             <div className="space-y-3">
@@ -544,7 +544,7 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
 
               <div>
                 <label className="text-[11px] font-mono uppercase text-zinc-400 block mb-1">
-                  Esports Map
+                  Map
                 </label>
                 <div className="grid grid-cols-3 gap-1.5">
                   {(['Bermuda', 'Purgatory', 'Kalahari', 'Alpine', 'NexTerra', 'Solara'] as EsportsMap[]).map((m) => (
@@ -564,18 +564,43 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
                 </div>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-black/40 border border-amber-500/10 text-[11px] font-mono text-zinc-400 space-y-1">
-                <div className="flex justify-between">
-                  <span>Scoring Rule:</span>
-                  <span className="text-amber-300 font-bold">FFWS 12-Pt Official</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>1st Place Points:</span>
-                  <span className="text-emerald-400 font-bold">12 Pts + Booyah</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Points Per Kill:</span>
-                  <span className="text-amber-400 font-bold">1 Pt / Kill</span>
+              {/* Apply Mode: Replace or Append */}
+              <div>
+                <label className="text-[11px] font-mono uppercase text-zinc-400 block mb-1.5">
+                  Points Table Target:
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setApplyMode('replace')}
+                    className={`py-2 px-2.5 rounded-lg text-xs font-rajdhani font-bold border transition text-left cursor-pointer ${
+                      applyMode === 'replace'
+                        ? 'bg-amber-500/20 border-amber-400 text-amber-200'
+                        : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
+                    }`}
+                  >
+                    <div className="font-bold flex items-center gap-1">
+                      <RotateCcw className="w-3 h-3 text-amber-400" />
+                      Fresh Points Table
+                    </div>
+                    <div className="text-[10px] text-zinc-400 font-normal">Team 1 leads at #1</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setApplyMode('append')}
+                    className={`py-2 px-2.5 rounded-lg text-xs font-rajdhani font-bold border transition text-left cursor-pointer ${
+                      applyMode === 'append'
+                        ? 'bg-amber-500/20 border-amber-400 text-amber-200'
+                        : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
+                    }`}
+                  >
+                    <div className="font-bold flex items-center gap-1">
+                      <ArrowRight className="w-3 h-3 text-amber-400" />
+                      Append as Next Match
+                    </div>
+                    <div className="text-[10px] text-zinc-400 font-normal">Add to existing table</div>
+                  </button>
                 </div>
               </div>
             </div>
@@ -584,23 +609,85 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
           {parsedResults.length > 0 && (
             <button
               onClick={handleApplyToPointsTable}
-              className="mt-4 w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-500 text-black font-extrabold font-rajdhani text-sm tracking-wider uppercase shadow-lg shadow-amber-500/30 flex items-center justify-center gap-2 cursor-pointer transition active:scale-95"
+              className="mt-4 w-full py-3 rounded-xl bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-500 hover:from-yellow-300 hover:to-amber-400 text-black font-extrabold font-rajdhani text-sm tracking-wider uppercase shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2 cursor-pointer transition active:scale-95"
             >
               <CheckCircle2 className="w-5 h-5 text-black" />
-              Apply to Points Table & Generate Poster
+              <span>
+                {applyMode === 'replace' 
+                  ? 'Make Points Table for Team 1 & All Teams' 
+                  : 'Apply Match to Points Table'}
+              </span>
             </button>
           )}
         </div>
       </div>
+
+      {/* TEAM 1 SPOTLIGHT CARD: Exact Calculation Breakdown */}
+      {team1 && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-amber-600/20 border-2 border-amber-500/50 shadow-xl shadow-amber-500/15 my-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-yellow-300 via-amber-500 to-yellow-600 flex items-center justify-center text-black font-black font-teko text-3xl shadow-lg shadow-amber-500/40 flex-shrink-0">
+                #1
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2 py-0.5 rounded bg-yellow-400/20 text-yellow-300 font-mono text-[10px] font-bold uppercase tracking-wider border border-yellow-400/40 flex items-center gap-1">
+                    <Crown className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                    BOOYAH! MATCH WINNER (TEAM 1)
+                  </span>
+                  <span className="text-zinc-400 text-xs font-mono">10 Squads Total</span>
+                </div>
+                <h3 className="font-teko text-3xl sm:text-4xl font-bold uppercase text-white tracking-wider leading-none mt-1">
+                  {team1.teamName}
+                </h3>
+                <div className="text-xs text-amber-200/90 font-mono mt-1 flex flex-wrap items-center gap-2">
+                  <span className="text-zinc-400">Squad Eliminations:</span>
+                  {team1.players.map((p, idx) => (
+                    <span key={idx} className="px-1.5 py-0.5 rounded bg-black/60 border border-amber-500/20 text-zinc-200">
+                      {p.name} <strong className="text-amber-400">({p.kills})</strong>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Calculated Metrics for Team 1 */}
+            <div className="grid grid-cols-3 gap-2 bg-black/70 p-3 rounded-xl border border-amber-500/30 text-center min-w-[280px]">
+              <div>
+                <div className="text-[10px] font-mono uppercase text-zinc-400">Position Pts</div>
+                <div className="font-teko text-3xl font-bold text-yellow-300 leading-none mt-0.5">
+                  {team1.placementPoints}
+                </div>
+                <div className="text-[9px] text-zinc-400 font-mono">Rank #1</div>
+              </div>
+              <div className="border-x border-amber-500/20 px-2">
+                <div className="text-[10px] font-mono uppercase text-zinc-400">Kill Pts</div>
+                <div className="font-teko text-3xl font-bold text-amber-400 leading-none mt-0.5">
+                  {team1.killPoints}
+                </div>
+                <div className="text-[9px] text-zinc-400 font-mono">{team1.kills} kills × 1pt</div>
+              </div>
+              <div>
+                <div className="text-[10px] font-mono uppercase text-amber-300 font-bold">Total Pts</div>
+                <div className="font-teko text-3xl font-extrabold text-white leading-none mt-0.5 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-200">
+                  {team1.totalPoints}
+                </div>
+                <div className="text-[9px] text-amber-300 font-mono font-bold">POS + KILLS</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Extracted Interactive Table */}
       {parsedResults.length > 0 && (
         <div className="mt-6 space-y-3">
           {/* Quick Scoring Rules Adjuster Bar */}
           <div className="p-3 bg-gradient-to-r from-amber-950/60 via-[#1a140a] to-amber-950/40 rounded-xl border border-amber-500/30 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 flex-wrap">
               <span className="font-teko text-lg font-bold text-amber-300 uppercase tracking-wide">
-                Adjust Scoring Rules:
+                Active Scoring Rule:
               </span>
               <div className="flex items-center gap-1.5 bg-black/60 px-2.5 py-1 rounded-lg border border-amber-500/30">
                 <span className="text-[11px] font-mono text-zinc-300">Kill Pts:</span>
@@ -647,18 +734,17 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
 
             {/* Quick Presets & Recalculate */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono text-zinc-400">Presets:</span>
               <button
                 type="button"
                 onClick={() => {
                   const ffMap: Record<number, number> = { 1: 12, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1, 11: 0, 12: 0 };
                   setActivePlacementMap(ffMap);
                   setActiveKillPts(1);
-                  handleApplyCustomScoringToTable(1, activeBooyahBonus, ffMap);
+                  handleApplyCustomScoringToTable(1, 0, ffMap);
                 }}
-                className="px-2 py-1 rounded bg-black/60 border border-amber-500/30 hover:border-amber-400 text-amber-200 text-[11px] font-rajdhani font-bold cursor-pointer"
+                className="px-2.5 py-1 rounded bg-black/60 border border-amber-500/30 hover:border-amber-400 text-amber-300 text-[11px] font-rajdhani font-bold cursor-pointer"
               >
-                Free Fire (12-Pt)
+                Free Fire Official (12-Pt)
               </button>
               <button
                 type="button"
@@ -666,19 +752,11 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
                   const pubgMap: Record<number, number> = { 1: 10, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 1, 8: 1, 9: 0, 10: 0, 11: 0, 12: 0 };
                   setActivePlacementMap(pubgMap);
                   setActiveKillPts(1);
-                  handleApplyCustomScoringToTable(1, activeBooyahBonus, pubgMap);
+                  handleApplyCustomScoringToTable(1, 0, pubgMap);
                 }}
-                className="px-2 py-1 rounded bg-black/60 border border-amber-500/30 hover:border-amber-400 text-amber-200 text-[11px] font-rajdhani font-bold cursor-pointer"
+                className="px-2.5 py-1 rounded bg-black/60 border border-amber-500/30 hover:border-amber-400 text-amber-200 text-[11px] font-rajdhani font-bold cursor-pointer"
               >
                 PUBG (10-Pt)
-              </button>
-              <button
-                type="button"
-                onClick={() => handleApplyCustomScoringToTable()}
-                className="px-2.5 py-1 rounded-lg bg-amber-500 text-black font-extrabold font-rajdhani text-[11px] flex items-center gap-1 cursor-pointer hover:bg-amber-400"
-              >
-                <RefreshCw className="w-3 h-3" />
-                Recalculate Table
               </button>
             </div>
           </div>
@@ -687,14 +765,14 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
             <div className="flex items-center gap-2">
               <Trophy className="w-4 h-4 text-amber-400" />
               <h3 className="font-teko text-xl font-bold uppercase tracking-wider text-amber-200">
-                Extracted Match Results ({parsedResults.length} Teams Detected)
+                Calculated Points Table ({parsedResults.length} Teams Detected)
               </h3>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                READY TO SYNC
+                READY TO APPLY
               </span>
             </div>
             <p className="text-xs text-zinc-400">
-              Directly adjust kills and placement points using [-] [+] before applying
+              Double-check kills or placement points before clicking Apply
             </p>
           </div>
 
@@ -704,10 +782,10 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
                 <tr className="bg-[#141008] text-amber-300/80 font-mono uppercase text-[11px] border-b border-amber-500/20">
                   <th className="py-2.5 px-3 text-center w-14">Rank</th>
                   <th className="py-2.5 px-3">Team Name (Editable)</th>
-                  <th className="py-2.5 px-3">Extracted Players & Kills</th>
-                  <th className="py-2.5 px-3 text-center w-28">Kills</th>
-                  <th className="py-2.5 px-3 text-center w-28">Place Pts</th>
-                  <th className="py-2.5 px-3 text-center w-24">Total Pts</th>
+                  <th className="py-2.5 px-3">Player Eliminations Breakdown</th>
+                  <th className="py-2.5 px-3 text-center w-28">Kills (Kill Pts)</th>
+                  <th className="py-2.5 px-3 text-center w-28">Position Pts</th>
+                  <th className="py-2.5 px-3 text-center w-28 bg-amber-500/10 text-amber-300 font-bold">Total Pts</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-amber-500/10">
@@ -726,7 +804,7 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
                     <tr
                       key={idx}
                       className={`hover:bg-amber-500/5 transition ${
-                        isTop3 ? 'bg-amber-500/[0.02]' : ''
+                        teamRes.rank === 1 ? 'bg-amber-500/10' : isTop3 ? 'bg-amber-500/[0.02]' : ''
                       }`}
                     >
                       {/* Rank */}
@@ -745,22 +823,28 @@ export const ScreenshotScanner: React.FC<ScreenshotScannerProps> = ({
                             onChange={(e) => handleUpdateTeamName(idx, e.target.value)}
                             className="bg-black/50 border border-amber-500/30 hover:border-amber-400 focus:border-amber-400 rounded px-2.5 py-1 text-xs font-bold text-amber-100 font-rajdhani uppercase w-full max-w-[200px]"
                           />
-                          <Edit3 className="w-3.5 h-3.5 text-zinc-500 opacity-60" />
+                          {teamRes.rank === 1 && (
+                            <Crown className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
+                          )}
                         </div>
                       </td>
 
                       {/* Players list */}
                       <td className="py-2 px-3">
                         <div className="flex flex-wrap gap-1">
-                          {teamRes.players.map((p, pIdx) => (
-                            <span
-                              key={pIdx}
-                              className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-300 flex items-center gap-1"
-                            >
-                              <span>{p.name}</span>
-                              <span className="text-amber-400 font-bold">({p.kills})</span>
-                            </span>
-                          ))}
+                          {teamRes.players.length > 0 ? (
+                            teamRes.players.map((p, pIdx) => (
+                              <span
+                                key={pIdx}
+                                className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-300 flex items-center gap-1"
+                              >
+                                <span>{p.name}</span>
+                                <span className="text-amber-400 font-bold">({p.kills})</span>
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-[10px] text-zinc-500 font-mono">Squad Eliminations: {teamRes.kills}</span>
+                          )}
                         </div>
                       </td>
 

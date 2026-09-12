@@ -12,7 +12,8 @@ import {
   Camera,
   Crown,
   Zap,
-  ArrowRight
+  ArrowRight,
+  RotateCcw
 } from 'lucide-react';
 
 interface StandingsTableProps {
@@ -24,6 +25,7 @@ interface StandingsTableProps {
   onOpenGraphicStudio: (layoutType?: string) => void;
   onOpenScoringRules: () => void;
   onOpenScreenshotScanner?: () => void;
+  onResetPointsTable?: (mode: 'clear_matches' | 'free_fire_screenshot' | 'default_tournament' | 'blank') => void;
 }
 
 export const StandingsTable: React.FC<StandingsTableProps> = ({
@@ -35,11 +37,13 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
   onOpenGraphicStudio,
   onOpenScoringRules,
   onOpenScreenshotScanner,
+  onResetPointsTable,
 }) => {
   const [editingCell, setEditingCell] = useState<{ matchId: string; teamId: string; field: 'kills' | 'placement' } | null>(null);
   const [cellValue, setCellValue] = useState<string>('');
   const [searchFilter, setSearchFilter] = useState('');
   const [isCompactView, setIsCompactView] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
 
   const safeMatches = matches || [];
   const safeStandings = standings || [];
@@ -121,6 +125,18 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
             <SlidersHorizontal className="w-3.5 h-3.5 text-amber-400" />
             <span>Rules</span>
           </button>
+
+          {/* Reset Points Table Button */}
+          {onResetPointsTable && (
+            <button
+              onClick={() => setIsResetModalOpen(true)}
+              className="px-3 py-2 text-xs font-bold font-rajdhani rounded-xl bg-red-950/40 hover:bg-red-900/60 text-red-300 border border-red-500/40 flex items-center gap-1.5 transition cursor-pointer active:scale-95"
+              title="Reset Points Table & Matches"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-red-400" />
+              <span>Reset Table</span>
+            </button>
+          )}
 
           {/* Quick theme launch shortcuts */}
           <div className="flex items-center gap-1 bg-black/60 p-1 rounded-xl border border-amber-500/20">
@@ -380,6 +396,119 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
           </tbody>
         </table>
       </div>
+
+      {/* Reset Points Table Modal */}
+      {isResetModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="max-w-md w-full bg-[#120e09] border border-amber-500/40 rounded-2xl p-5 sm:p-6 shadow-2xl text-slate-100 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-amber-500/20">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400">
+                  <RotateCcw className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-teko text-2xl font-bold uppercase text-white tracking-wide leading-none">
+                    Reset Points Table
+                  </h3>
+                  <p className="text-xs text-zinc-400 font-rajdhani">
+                    Choose how you want to reset tournament match standings
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsResetModalOpen(false)}
+                className="p-1 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {/* Option 1: Load Free Fire Screenshot Match */}
+              <button
+                onClick={() => {
+                  onResetPointsTable?.('free_fire_screenshot');
+                  setIsResetModalOpen(false);
+                }}
+                className="w-full p-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-left transition group cursor-pointer"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-amber-300 font-rajdhani text-sm flex items-center gap-1.5">
+                    <Crown className="w-4 h-4 text-yellow-400" />
+                    Load Free Fire Screenshot Match (Bloodline #1)
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">
+                    Recommended
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Sets the points table with your uploaded screenshot: Team 1 BLOODLINE in 1st place with 12 position pts, 16 kills (16 pts), and 28 total points.
+                </p>
+              </button>
+
+              {/* Option 2: Clear all matches (Zero points) */}
+              <button
+                onClick={() => {
+                  onResetPointsTable?.('clear_matches');
+                  setIsResetModalOpen(false);
+                }}
+                className="w-full p-3 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/60 text-left transition cursor-pointer"
+              >
+                <span className="font-bold text-slate-200 font-rajdhani text-sm flex items-center gap-1.5">
+                  <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                  Clear All Matches (Reset All Points to 0)
+                </span>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Wipes all recorded matches so every team's placement points, kill points, and total points reset to 0. Keeps your team roster.
+                </p>
+              </button>
+
+              {/* Option 3: Restore Default Championship Sample */}
+              <button
+                onClick={() => {
+                  onResetPointsTable?.('default_tournament');
+                  setIsResetModalOpen(false);
+                }}
+                className="w-full p-3 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/60 text-left transition cursor-pointer"
+              >
+                <span className="font-bold text-slate-200 font-rajdhani text-sm flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                  Restore Default 12-Team Championship Sample
+                </span>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Restores the standard 12-team tournament sample with 3 matches.
+                </p>
+              </button>
+
+              {/* Option 4: Complete Blank Tournament */}
+              <button
+                onClick={() => {
+                  onResetPointsTable?.('blank');
+                  setIsResetModalOpen(false);
+                }}
+                className="w-full p-3 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/60 text-left transition cursor-pointer"
+              >
+                <span className="font-bold text-red-300 font-rajdhani text-sm flex items-center gap-1.5">
+                  <RotateCcw className="w-3.5 h-3.5 text-red-400" />
+                  Blank Reset (Clear Teams & Matches)
+                </span>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Clears all teams and matches to start completely blank.
+                </p>
+              </button>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setIsResetModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold font-rajdhani cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
