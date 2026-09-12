@@ -1,0 +1,6 @@
+{
+  "name": "Vintage Esports Studio",
+  "description": "Advanced automatic Free Fire tournament points-table engine and professional template system with custom scoring, multi-match automation, and graphic generation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

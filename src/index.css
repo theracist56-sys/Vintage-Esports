@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .font-teko {
+    font-family: 'Teko', sans-serif;
+  }
+  .font-rajdhani {
+    font-family: 'Rajdhani', sans-serif;
+  }
+  .font-orbitron {
+    font-family: 'Orbitron', sans-serif;
+  }
+  .font-chakra {
+    font-family: 'Chakra Petch', sans-serif;
+  }
+  .font-cinzel {
+    font-family: 'Cinzel', serif;
+  }
+  .gold-gradient-text {
+    background: linear-gradient(180deg, #ffffff 0%, #fef08a 35%, #eab308 70%, #ca8a04 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+/* Esports Custom Scrollbar - Golden & Obsidian */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #090806;
+}
+::-webkit-scrollbar-thumb {
+  background: #453412;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ca8a04;
+}
+
